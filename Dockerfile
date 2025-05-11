@@ -19,4 +19,5 @@ COPY --from=frontend /app/build /frontend
 RUN apt-get update && apt-get install -y nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080 80
-CMD service nginx start && java -jar app.jar
+CMD service nginx start && \
+    java -Xmx256m -Xms128m -jar app.jar  # Ограничиваем память Java
