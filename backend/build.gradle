@@ -1,0 +1,86 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id "org.sonarqube" version "6.0.1.5171"
+    id 'jacoco'
+}
+
+jacoco {
+    toolVersion = "0.8.9" // Указываем версию JaCoCo
+    reportsDirectory = layout.buildDirectory.dir('reports/jacoco') // Директория для отчетов
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "JChanK_Library"
+        property "sonar.organization", "jchank"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.login", "aacfb9d4f1c098daca4c05dda5bd103da7383f28"
+    }
+}
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+sonarqube {
+    properties {
+        property "sonar.exclusions", "**/test/service/AuthorServiceTest.java, **/test/service/BookServiceTest.java, **/test/service/ReviewServiceTest.java"
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    // Логирование
+    implementation 'org.springframework.boot:spring-boot-starter-logging'
+    implementation 'ch.qos.logback:logback-classic'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacocoTestReport.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/test/html')
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/config/**',
+                    '**/dto/**',
+                    '**/exception/**',
+                    '**/model/**',
+                    '**/LibraryApplication**'
+            ])
+        }))
+    }
+}
+
+jacocoTestReport.finalizedBy jacocoTestCoverageVerification
